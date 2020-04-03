@@ -1,5 +1,5 @@
 module.exports = {
-  title: 'QNAP管理工具',
+  title: 'QBot的凝视',
 
   /**
    * @type {boolean} true | false

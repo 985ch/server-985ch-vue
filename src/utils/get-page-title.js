@@ -1,6 +1,6 @@
 import defaultSettings from '@/settings'
 
-const title = defaultSettings.title || 'QNAP管理工具'
+const title = defaultSettings.title || 'Bot的凝视'
 
 export default function getPageTitle(pageTitle) {
   if (pageTitle) {
