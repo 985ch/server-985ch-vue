@@ -8,6 +8,14 @@ const getters = {
   nick: state => state.user.nick,
   name: state => state.user.qq,
   roles: state => state.user.roles,
+  role: state => {
+    const map = {}
+    const roles = state.user.roles || []
+    for (const cur of roles) {
+      map[cur] = true
+    }
+    return map
+  },
   permission_routes: state => state.permission.routes,
   errorLogs: state => state.errorLog.logs,
   titleTypes: state => state.title.titleTypes

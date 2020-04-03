@@ -35,7 +35,7 @@ export default {
       this.list.splice(index + 1, 0, this.defaultitem)
     },
     removeItem(index) {
-      this.list.splice(index, 1)
+      if (this.list.length > 1) this.list.splice(index, 1)
     },
     itemUp(i) {
       const list = this.list

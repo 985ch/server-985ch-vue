@@ -80,7 +80,7 @@ export const constantRoutes = [
   {
     path: '/resources',
     component: Layout,
-    redirect: '/resources/home',
+    redirect: '/resources/titles',
     name: 'Resources',
     meta: { title: '资源', icon: 'education' },
     children: [
@@ -89,6 +89,13 @@ export const constantRoutes = [
         name: 'ResourcesTitles',
         component: () => import('@/views/resources/titles'),
         meta: { title: '作品列表', icon: 'component' }
+      },
+      {
+        path: '/resources/titlepage',
+        name: 'ResourcesTitle',
+        component: () => import('@/views/resources/titlepage'),
+        meta: { title: '作品页面', icon: 'component' },
+        hidden: true
       },
       {
         path: '/resources/images',

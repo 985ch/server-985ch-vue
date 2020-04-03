@@ -1,5 +1,5 @@
 <template>
-  <div :id="id" />
+  <div v-show="visible" :id="id" />
 </template>
 
 <script>
@@ -33,7 +33,7 @@ export default {
     },
     mode: {
       type: String,
-      default: 'markdown'
+      default: 'wysiwyg'
     },
     height: {
       type: String,
@@ -44,6 +44,11 @@ export default {
       type: String,
       required: false,
       default: 'en_US' // https://github.com/nhnent/tui.editor/tree/master/src/js/langs
+    },
+    visible: {
+      type: Boolean,
+      required: false,
+      default: true
     }
   },
   data() {

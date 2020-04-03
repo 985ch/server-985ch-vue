@@ -1,15 +1,18 @@
 <template>
   <div>
-    <el-autocomplete
-      v-model="searchText"
-      class="search-input"
-      :fetch-suggestions="getSearchHistory"
-      placeholder="请输入搜索条件"
-      clearable
-      @keydown.enter="search"
-    >
-      <el-button slot="append" icon="el-icon-search" @click="search" />
-    </el-autocomplete>
+    <div class="search-input">
+      <search-input
+        ckey="TitleSearchHistory"
+        name="titleSearchInput"
+
+        :value="searchText"
+        :max="10"
+        @input="updateSearchText"
+        @search="search"
+      />
+    </div>
+    <el-button v-if="role['editor']" @click="addTitle">添加作品</el-button>
+    <el-switch v-if="role['adult']" :value="nsfw" active-text="NSFW" inactive-text="健全" @input="handleNsfw" />
     <el-checkbox-group :value="selectTypes" size="medium" @input="typesChange">
       <el-checkbox-button v-for="type in titleTypes" :key="type.id" :label="type">{{ type.name }}</el-checkbox-button>
     </el-checkbox-group>
@@ -26,9 +29,23 @@
           {{ getTitleTypeName(scope.row.typeid) }}
         </template>
       </el-table-column>
-      <el-table-column label="名字">
+      <el-table-column label="作品">
         <template slot-scope="scope">
-          {{ scope.row.names | nameFilter }}
+          <el-popover
+            placement="right-start"
+            width="200"
+            trigger="hover"
+            :disabled="scope.row.pic==''"
+          >
+            <el-image
+              style="width: 300px; height: 300px"
+              :src="scope.row.pic"
+              fit="scale-down"
+            />
+            <router-link slot="reference" :to="getTitleLink(scope.row.id)">
+              {{ scope.row.names | nameFilter }}
+            </router-link>
+          </el-popover>
         </template>
       </el-table-column>
       <el-table-column label="发布时间" width="150" align="center">
@@ -38,7 +55,7 @@
       </el-table-column>
       <el-table-column label="更新时间" width="200" align="center">
         <template slot-scope="scope">
-          {{ scope.row.release_time | timeFilter }}
+          {{ scope.row.add_time | timeFilter }}
         </template>
       </el-table-column>
     </el-table>
@@ -60,6 +77,9 @@ import _ from 'lodash'
 
 export default {
   name: 'ResourcesTitles',
+  components: {
+    SearchInput: () => import('@/components/SearchInput')
+  },
   filters: {
     timeFilter(time) {
       return parseTime(time)
@@ -74,21 +94,21 @@ export default {
   },
   data() {
     return {
-      total: 0,
-      curPage: 1,
-      searchText: '',
-      titles: [],
       listLoading: false
     }
   },
   computed: {
     ...mapState('title', [
+      'total',
+      'curPage',
+      'searchText',
+      'titles',
       'pageSize',
-      'selectTypes'
+      'selectTypes',
+      'nsfw'
     ]),
-    ...mapGetters([
-      'titleTypes'
-    ]),
+    ...mapGetters(['role', 'titleTypes']),
+    ...mapGetters('title', ['typeMap']),
     showTitles() {
       const showTitles = []
       const first = (this.curPage - 1) * this.pageSize
@@ -99,7 +119,7 @@ export default {
       return showTitles
     }
   },
-  mounted() {
+  created() {
     this.$store.dispatch('title/getTitleTypes').then(() => {
       this.pageChange(1)
     })
@@ -109,39 +129,47 @@ export default {
     typesChange(types) {
       this.$store.commit('title/selectTypes', types)
     },
+    // 处理搜索文本的变化
+    updateSearchText(text) {
+      this.$store.state.title.searchText = text
+    },
     // 处理翻页
     pageChange(page) {
-      this.curPage = page
-      console.log(this.curPage)
+      this.$store.state.title.curPage = page
     },
     // 处理尺寸缩放
     handleSizeChange(size) {
       this.$store.state.title.pageSize = size
-      console.log(this.pageSize)
     },
-    // 获取搜索历史记录
-    getSearchHistory(text, cb) {
-      cb([{ value: 'aaa' }, { value: 'abc' }])
+    // 处理NSFW选项
+    handleNsfw(nsfw) {
+      this.$store.state.title.nsfw = nsfw
+    },
+    // 添加作品
+    async addTitle() {
+      this.$router.push({ name: 'ResourcesTitle' })
     },
     // 搜索
-    async search() {
+    async search(event) {
       this.listLoading = true
-      const titles = await this.$store.dispatch('title/findTitles', {
+      await this.$store.dispatch('title/findTitles', {
         keyword: this.searchText,
         types: _.map(this.selectTypes, 'id'),
-        nsfw: 0
+        nsfw: this.nsfw ? 1 : 0
       })
-      console.log(titles)
       this.listLoading = false
-      this.total = titles.length
-      this.titles = titles
     },
     // 获取类型名称
     getTitleTypeName(typeid) {
-      for (const cur of this.titleTypes) {
-        if (typeid === cur.id) return cur.name
+      const obj = this.typeMap[typeid]
+      return obj ? obj.name : '未知类型'
+    },
+    // 获取作品地址
+    getTitleLink(id) {
+      return {
+        name: 'ResourcesTitle',
+        query: { id }
       }
-      return '未知'
     }
   }
 }
@@ -151,7 +179,7 @@ export default {
 .search-input {
     display: inline-block;
     height: 47px;
-    width: 85%;
+    width: 70%;
 }
 </style>
 
