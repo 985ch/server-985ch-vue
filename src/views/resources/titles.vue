@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="main-page">
     <div class="search-input">
       <search-input
         ckey="TitleSearchHistory"
@@ -33,7 +33,7 @@
         <template slot-scope="scope">
           <el-popover
             placement="right-start"
-            width="200"
+            width="300"
             trigger="hover"
             :disabled="scope.row.pic==''"
           >
@@ -181,5 +181,8 @@ export default {
     height: 47px;
     width: 70%;
 }
+.main-page {
+    margin:2%
+  }
 </style>
 

@@ -35,3 +35,12 @@ export function unbindTitle(id) {
     data: { id }
   })
 }
+
+export function getBgmData(id) {
+  return request({
+    url: '/resource/bgmdata',
+    method: 'get',
+    params: { id },
+    timeout: 10000
+  })
+}

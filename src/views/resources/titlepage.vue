@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="main-page">
     <h2>
       {{ titleName }}
       <el-switch v-if="role['editor']" v-model="editMode" />
@@ -16,11 +16,16 @@
       </el-select>
       <el-date-picker v-model="edit.releaseTime" type="month" placeholder="发行时间" />
       <el-switch v-if="role['adult']" v-model="edit.nsfw" active-text="NSFW" inactive-text="健全作品" />
+      <div class="catch-input">
+        <el-input v-model="bgmid" placeholder="请输入bgmid" @keyup.enter.native="catchInfo">
+          <el-button slot="append" @click="catchInfo">爬取</el-button>
+        </el-input>
+      </div>
       <array-input :list="edit.names" listname="titleNames" placeholder="请添加作品名称" defaultitem="" />
     </div>
     <div v-show="!editMode">
       <h4 v-for="name in titleAlias" :key="name">{{ name }}<br></h4>
-      <span class="titleType">{{ `${titleTypeName}(${getDate(curTitle.release_time)})` }}</span>
+      <span class="title-type">{{ `${titleTypeName}(${getDate(curTitle.release_time)})` }}</span>
     </div>
     <hr>
     <el-row>
@@ -30,7 +35,7 @@
             <resource-viewer :is-admin="role['admin']||false" :info="item" :filejson="filejson" @unbind="unbindResource" />
           </el-collapse-item>
         </el-collapse>
-        <div v-show="role['admin']" align="right">
+        <div v-show="curTitle.id!=0 && role['admin']" align="right">
           <el-button @click="showResBox=true">添加资源路径</el-button>
         </div>
         <hr>
@@ -62,9 +67,10 @@
 
 <script>
 import { saveTitle, getTitleData } from '@/api/title'
-import { bindTitle, unbindTitle } from '@/api/resource'
+import { bindTitle, unbindTitle, getBgmData } from '@/api/resource'
 import { mapGetters, mapState } from 'vuex'
 import { parseTime } from '@/utils'
+import { info2markdown } from '@/utils/resource'
 import _ from 'lodash'
 
 export default {
@@ -89,7 +95,7 @@ export default {
     }
   },
   data() {
-    const defaultTime = new Date('1970-1-1')
+    const defaultTime = new Date()
     return {
       curTitle: { // 当前作品主要字段
         id: 0,
@@ -116,6 +122,7 @@ export default {
         nsfw: false
       },
       picInput: '', // 图片地址输入框绑定值
+      bgmid: '', // bangumi链接ID
       editMode: true, // 编辑模式
       showResBox: false // 是否显示资源绑定框
     }
@@ -199,6 +206,7 @@ export default {
     async onSaveData() {
       this.edit.pic = this.picInput
       const data = await saveTitle(this.edit)
+      this.edit.id = data.id
       data.release_time = new Date(data.release_time)
       this.curTitle = data
       this.$message({
@@ -239,14 +247,42 @@ export default {
       await unbindTitle(id)
       _.remove(this.resources, (item) => item.id === id)
       this.activeResource = ''
+    },
+    // 爬取bangumi的资源
+    catchInfo() {
+      this.$confirm('即将用来自bgm.tv的数据覆盖掉现有数据，确定吗？', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'info'
+      }).then(() => {
+        return getBgmData(this.bgmid)
+      }).then((data) => {
+        const cur = this.curTitle
+        this.edit = {
+          id: cur.id,
+          typeid: cur.typeid,
+          names: data.names,
+          nsfw: cur.nsfw,
+          releaseTime: new Date(data.releaseTime),
+          pic: data.img,
+          info: info2markdown(data)
+        }
+        this.picInput = data.img
+      }).catch(() => { })
     }
   }
 }
 </script>
 
 <style lang="scss" scoped>
-  .titleType {
+  .title-type {
 		font-size: 18px;
 		color:#B0B0B0
 	}
+  .catch-input {
+    display: inline-block;
+  }
+  .main-page {
+    margin:2%
+  }
 </style>
