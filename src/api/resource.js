@@ -41,6 +41,6 @@ export function getBgmData(id) {
     url: '/resource/bgmdata',
     method: 'get',
     params: { id },
-    timeout: 10000
+    timeout: 15000
   })
 }
