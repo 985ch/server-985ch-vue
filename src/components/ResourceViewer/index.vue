@@ -89,7 +89,7 @@ export default {
         cancelButtonText: '取消',
         type: 'info'
       }).then(() => {
-        this.$emit('unbind', this.info.id)
+        this.$emit('unbind', this.info)
       }).catch(() => {})
     }
   }
