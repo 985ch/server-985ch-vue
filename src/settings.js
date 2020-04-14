@@ -26,6 +26,11 @@ module.exports = {
   sidebarLogo: true,
 
   /**
+   * @type {boolean} true | false
+   * @description Whether use the mobile mode
+   */
+  mobileMode: false,
+  /**
    * @type {string | array} 'production' | ['production', 'development']
    * @description Need show err logs component.
    * The default is only used in the production env

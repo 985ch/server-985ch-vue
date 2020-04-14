@@ -7,11 +7,17 @@ export function getTitleTypes() {
   })
 }
 
-export function findTitles(keyword, types, nsfw) {
+export function findTitles(keyword, types, nsfw, offset, limit) {
   return request({
     url: '/resource/titles',
     method: 'get',
-    params: { keyword, types, nsfw }
+    params: {
+      keyword,
+      types,
+      nsfw: nsfw ? 1 : 0,
+      offset,
+      limit
+    }
   })
 }
 

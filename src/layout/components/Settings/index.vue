@@ -23,6 +23,11 @@
         <el-switch v-model="sidebarLogo" class="drawer-switch" />
       </div>
 
+      <div class="drawer-item">
+        <span>手机模式</span>
+        <el-switch v-model="mobileMode" class="drawer-switch" />
+      </div>
+
     </div>
   </div>
 </template>
@@ -65,6 +70,17 @@ export default {
       set(val) {
         this.$store.dispatch('settings/changeSetting', {
           key: 'sidebarLogo',
+          value: val
+        })
+      }
+    },
+    mobileMode: {
+      get() {
+        return this.$store.state.settings.mobileMode
+      },
+      set(val) {
+        this.$store.dispatch('settings/changeSetting', {
+          key: 'mobileMode',
           value: val
         })
       }

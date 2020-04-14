@@ -1,7 +1,7 @@
 <template>
   <div>
     <el-autocomplete
-      :ref="name"
+      ref="searchinput"
       class="search-input"
       :value="value"
       :fetch-suggestions="getHistory"
@@ -23,10 +23,6 @@ import Cookies from 'js-cookie'
 export default {
   name: 'SearchInput',
   props: {
-    name: {
-      type: String,
-      default: 'searchinput'
-    },
     value: {
       type: String,
       default: ''
@@ -73,7 +69,7 @@ export default {
       // 关闭建议框
       if (event) {
         event.target.blur()
-        this.$refs[this.name].close()
+        this.$refs.searchinput.close()
       }
       this.$emit('search', this.value)
       const keyword = this.value === '' ? this.value : undefined
@@ -83,7 +79,7 @@ export default {
       }
     },
     onSelected(event) {
-      this.$refs[this.name].focus()
+      this.$refs.searchinput.focus()
     }
   }
 }
