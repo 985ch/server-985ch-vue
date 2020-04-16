@@ -9,8 +9,10 @@
           @click="handleShow(item)"
         >
         <div style="padding: 14px;">
-          <router-link :to="item.id | titleLink">{{ item.names | nameFilter }}</router-link>
-          <span class="time">({{ item.release_time | dateFilter }})</span>
+          <router-link :to="item.id | titleLink" :style="item.like | likeStyle">
+            <i v-show="item.concern" class="el-icon-warning" />
+            {{ item.names | nameFilter }}
+          </router-link>
           <div class="bottom clearfix">
             <time class="time">{{ item.add_time | timeFilter }}</time>
           </div>
@@ -31,6 +33,11 @@
           {{ scope.row.typeid | titleTypeName(typeMap) }}
         </template>
       </el-table-column>
+      <el-table-column align="center" label="喜好" width="95">
+        <template slot-scope="scope">
+          <span :style="scope.row.like | likeStyle">{{ scope.row.like | likeText }}</span>
+        </template>
+      </el-table-column>
       <el-table-column label="作品">
         <template slot-scope="scope">
           <el-popover
@@ -40,7 +47,12 @@
             @show="handleShow(scope.row)"
           >
             <img class="image" :src="scope.row.id | imageUrl(imageLoaded)" fit="scale-down">
-            <router-link slot="reference" :to="scope.row.id | titleLink">
+            <router-link
+              slot="reference"
+              :to="scope.row.id | titleLink"
+              :style="scope.row.concern===1?'color:royalblue':'color:dimgrey'"
+            >
+              <i v-show="scope.row.concern" class="el-icon-warning" />
               {{ scope.row.names | nameFilter }}
             </router-link>
           </el-popover>
@@ -66,6 +78,13 @@ import { mapState, mapGetters } from 'vuex'
 import { parseTime } from '@/utils'
 import _ from 'lodash'
 
+const likeInfo = [
+  { text: '一般', style: 'color:dimgrey' },
+  { text: '喜欢', style: 'color:darkblue' },
+  { text: '不喜', style: 'color:grey' },
+  { text: '未看', style: 'color:brown' }
+]
+
 export default {
   name: 'Pagination',
   filters: {
@@ -86,6 +105,12 @@ export default {
     titleLink(id) {
       return { name: 'ResourcesTitle', query: { id }}
     },
+    likeText(val) {
+      return likeInfo[val || 0].text
+    },
+    likeStyle(val) {
+      return likeInfo[val || 0].style
+    },
     imageUrl(id, imageLoaded) {
       if (imageLoaded[id] === '') return require('@/assets/default.jpg')
       return imageLoaded[id] || require('@/assets/logo.jpg')
@@ -105,18 +130,21 @@ export default {
   },
   computed: {
     ...mapState('settings', ['mobileMode']),
-    ...mapState('title', ['curPage', 'pageSize', 'imageLoaded']),
+    ...mapState('title', ['imageLoaded']),
     ...mapGetters('title', ['typeMap']),
     data() {
       return _.map(this.raw, this.translator)
     },
     curPage: {
-      get() { return this.page },
+      get() { return this.$store.state.title.curPage },
       set(val) { this.$store.commit('title/setState', { key: 'curPage', val }) }
     },
     pageLimit: {
-      get() { return this.limit },
-      set(val) { this.$store.commit('title/setState', { key: 'pageSize', val }) }
+      get() { return this.$store.state.title.pageSize },
+      set(val) {
+        this.curPage = Math.floor((this.curPage - 1) * this.pageLimit / val) + 1
+        this.$store.commit('title/setState', { key: 'pageSize', val })
+      }
     }
   },
   methods: {

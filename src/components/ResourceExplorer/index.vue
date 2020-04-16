@@ -22,7 +22,7 @@
         />
       </el-collapse-item>
     </el-collapse>
-    <div v-show="role['admin'] && titleid!==0" align="right">
+    <div v-if="role['admin'] && showAddbtn" align="right">
       <el-button @click="handleAdd">添加资源路径</el-button>
     </div>
     <hr>
@@ -51,9 +51,9 @@ export default {
         return []
       }
     },
-    titleid: {
-      type: Number,
-      default: 0
+    showAddbtn: {
+      type: Boolean,
+      default: true
     }
   },
   data() {

@@ -6,6 +6,7 @@ const state = {
   curPage: 1, // 当前页
   searchText: '', // 搜索字符串
   nsfw: false,
+  concern: false, // 是否仅搜索关注作品
   pageSize: 15, // 每页条目数
   selectTypes: null, // 选中的作品类型
   titleTypes: null, // 所有作品类型
@@ -49,11 +50,21 @@ const actions = {
     }
   },
   // 搜索作品
-  async search({ state, getters }, keyword) {
+  async search({ state, getters }, { keyword, reset }) {
+    if (reset || keyword !== state.searchText) {
+      state.searchText = keyword
+      state.curPage = 1
+    }
     keyword = keyword !== '' ? keyword : undefined
     const offset = (state.curPage - 1) * state.pageSize
-    const titles = await findTitles(keyword, getters.types, state.nsfw, offset, state.pageSize)
-    state.searchText = keyword
+    const titles = await findTitles({
+      keyword,
+      types: getters.types,
+      nsfw: state.nsfw ? 1 : 0,
+      concern: state.concern ? 1 : 0,
+      offset,
+      limit: state.pageSize
+    })
     return titles
   }
 }

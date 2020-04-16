@@ -7,17 +7,11 @@ export function getTitleTypes() {
   })
 }
 
-export function findTitles(keyword, types, nsfw, offset, limit) {
+export function findTitles(params) {
   return request({
     url: '/resource/titles',
     method: 'get',
-    params: {
-      keyword,
-      types,
-      nsfw: nsfw ? 1 : 0,
-      offset,
-      limit
-    }
+    params
   })
 }
 
@@ -42,5 +36,29 @@ export function saveTitle({ id, typeid, names, releaseTime, pic, info, nsfw }) {
       info,
       nsfw
     }
+  })
+}
+
+export function concernTitle(id, concern) {
+  return request({
+    url: '/title/concern',
+    method: 'post',
+    data: { id, concern }
+  })
+}
+
+export function likeTitle(id, like) {
+  return request({
+    url: '/title/like',
+    method: 'post',
+    data: { id, like }
+  })
+}
+
+export function noteTitle(id, note) {
+  return request({
+    url: '/title/note',
+    method: 'post',
+    data: { id, note }
   })
 }
