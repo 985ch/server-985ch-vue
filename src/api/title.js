@@ -23,19 +23,11 @@ export function getTitleData(id) {
   })
 }
 
-export function saveTitle({ id, typeid, names, releaseTime, pic, info, nsfw }) {
+export function saveTitle(data) {
   return request({
     url: '/title/save',
     method: 'post',
-    data: {
-      id,
-      typeid,
-      names: names.join('\n'),
-      releaseTime: releaseTime.toString(),
-      pic,
-      info,
-      nsfw
-    }
+    data
   })
 }
 

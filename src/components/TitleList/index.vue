@@ -12,9 +12,10 @@
           <router-link :to="item.id | titleLink" :style="item.like | likeStyle">
             <i v-show="item.concern" class="el-icon-warning" />
             {{ item.names | nameFilter }}
+            <span class="time">({{ item.release_time | dateFilter }})</span>
           </router-link>
           <div class="bottom clearfix">
-            <time class="time">{{ item.add_time | timeFilter }}</time>
+            <time class="time">更新时间：{{ item.add_time | timeFilter }} 资源：{{ item.count }}</time>
           </div>
         </div>
       </el-card>
@@ -33,7 +34,7 @@
           {{ scope.row.typeid | titleTypeName(typeMap) }}
         </template>
       </el-table-column>
-      <el-table-column align="center" label="喜好" width="95">
+      <el-table-column align="center" label="喜好" width="80">
         <template slot-scope="scope">
           <span :style="scope.row.like | likeStyle">{{ scope.row.like | likeText }}</span>
         </template>
@@ -58,7 +59,12 @@
           </el-popover>
         </template>
       </el-table-column>
-      <el-table-column label="发布时间" width="150" align="center">
+      <el-table-column label="资源" width="60" align="center">
+        <template slot-scope="scope">
+          {{ scope.row.count }}
+        </template>
+      </el-table-column>
+      <el-table-column label="发布时间" width="100" align="center">
         <template slot-scope="scope">
           {{ scope.row.release_time | dateFilter }}
         </template>
