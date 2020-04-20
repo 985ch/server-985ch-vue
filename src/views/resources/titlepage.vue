@@ -54,7 +54,6 @@
 import { noteTitle, saveTitle, getTitleData } from '@/api/title'
 import { bindTitle, unbindTitle } from '@/api/resource'
 import { mapState } from 'vuex'
-import { parseTime } from '@/utils'
 import { info2markdown } from '@/utils/resource'
 import _ from 'lodash'
 
@@ -117,10 +116,6 @@ export default {
     this.edit = _.clone(this.title)
   },
   methods: {
-    // 获取日期
-    getDate(date) {
-      return parseTime(date, '{y}/{m}')
-    },
     // 保存数据
     async saveData() {
       this.edit.pic = this.picInput
@@ -174,8 +169,8 @@ export default {
       const cur = this.title
       this.edit = {
         id: cur.id,
-        typeid: cur.typeid,
-        names: data.names,
+        typeid: data.type === 'MOVIE' ? 2 : 1,
+        names: data.names.join('\n'),
         nsfw: cur.nsfw === 1,
         release_time: data.releaseTime,
         pic: data.img,

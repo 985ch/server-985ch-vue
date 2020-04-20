@@ -152,7 +152,7 @@ export default {
   color: #b0b0b0;
 }
 .select-box {
-  width: 100px;
+  width: 120px;
 }
 .catch-input {
   display: inline-block;
