@@ -1,7 +1,7 @@
 <template>
   <div>
     <h2>
-      <el-button v-if="!newTitle" :type="concern | concernBtnType" round @click="concern=!concern">关注</el-button>
+      <el-button v-if="!newTitle" :type="concern | concernBtnType" round @click="concern=(concern+1)%3">关注</el-button>
       {{ titleName }}
       <span class="title-type">{{ titleTypeName }}({{ title.release_time | dateFilter }})</span>
       <el-switch v-if="role['editor']" v-model="editMode" />
@@ -51,7 +51,9 @@ export default {
   },
   filters: {
     dateFilter(time) { return parseTime(time, '{y}/{m}') },
-    concernBtnType(concern) { return concern ? 'primary' : 'info' }
+    concernBtnType(concern) {
+      return concern === 2 ? 'success' : (concern === 1 ? 'primary' : 'info')
+    }
   },
   props: {
     value: { type: Boolean, required: true },
@@ -63,10 +65,10 @@ export default {
     return {
       bgmid: '',
       likeInfo: [
-        { label: '一般', value: 0 },
-        { label: '喜欢', value: 1 },
-        { label: '不喜', value: 2 },
-        { label: '未看', value: 3 }
+        { label: '未看', value: 0 },
+        { label: '一般', value: 1 },
+        { label: '喜欢', value: 2 },
+        { label: '不喜', value: 3 }
       ]
     }
   },
@@ -113,11 +115,10 @@ export default {
     },
     // 关注状态
     concern: {
-      get() { return this.note.concern === 1 },
+      get() { return this.note.concern },
       set(val) {
-        const concern = val ? 1 : 0
-        this.$set(this.note, 'concern', concern)
-        concernTitle(this.title.id, concern)
+        this.$set(this.note, 'concern', val)
+        concernTitle(this.title.id, val)
       }
     }
   },

@@ -10,7 +10,7 @@
         >
         <div style="padding: 14px;">
           <router-link :to="item.id | titleLink" :style="item.like | likeStyle">
-            <i v-show="item.concern" class="el-icon-warning" />
+            <i v-show="item.concern" :class="item.concern | concernIcon" />
             {{ item.names | nameFilter }}
             <span class="time">({{ item.release_time | dateFilter }})</span>
           </router-link>
@@ -34,9 +34,24 @@
           {{ scope.row.typeid | titleTypeName(typeMap) }}
         </template>
       </el-table-column>
-      <el-table-column align="center" label="喜好" width="80">
+      <el-table-column align="center" label="喜好" width="120">
         <template slot-scope="scope">
-          <span :style="scope.row.like | likeStyle">{{ scope.row.like | likeText }}</span>
+          <el-popover
+            v-model="scope.row.showLike"
+            placement="right-start"
+            trigger="click"
+            width="150"
+          >
+            <li
+              v-for="item in likeInfo"
+              :key="item.value"
+              :style="item.style"
+              @click="handleLike(scope.row, item.value)"
+            >
+              {{ item.text }}
+            </li>
+            <span slot="reference" :style="scope.row.like | likeStyle">{{ scope.row.like |likeText }}</span>
+          </el-popover>
         </template>
       </el-table-column>
       <el-table-column label="作品">
@@ -51,9 +66,9 @@
             <router-link
               slot="reference"
               :to="scope.row.id | titleLink"
-              :style="scope.row.concern===1?'color:royalblue':'color:dimgrey'"
+              :style="scope.row.concern | concernStyle"
             >
-              <i v-show="scope.row.concern" class="el-icon-warning" />
+              <i v-show="scope.row.concern" :class="scope.row.concern | concernIcon" />
               {{ scope.row.names | nameFilter }}
             </router-link>
           </el-popover>
@@ -80,15 +95,22 @@
 </template>
 
 <script>
+import { likeTitle } from '@/api/title'
 import { mapState, mapGetters } from 'vuex'
 import { parseTime } from '@/utils'
 import _ from 'lodash'
 
 const likeInfo = [
-  { text: '一般', style: 'color:dimgrey' },
-  { text: '喜欢', style: 'color:darkblue' },
-  { text: '不喜', style: 'color:grey' },
-  { text: '未看', style: 'color:brown' }
+  { text: '未看', style: 'cursor:pointer;color:brown', value: 0 },
+  { text: '一般', style: 'cursor:pointer;color:dimgrey', value: 1 },
+  { text: '喜欢', style: 'cursor:pointer;color:darkblue', value: 2 },
+  { text: '不喜', style: 'cursor:pointer;color:chartreuse', value: 3 }
+]
+
+const concernInfo = [
+  { icon: '', style: 'color:dimgrey' },
+  { icon: 'el-icon-warning', style: 'color:royalblue' },
+  { icon: 'el-icon-star-on', style: 'color:forestgreen' }
 ]
 
 export default {
@@ -111,12 +133,10 @@ export default {
     titleLink(id) {
       return { name: 'ResourcesTitle', query: { id }}
     },
-    likeText(val) {
-      return likeInfo[val || 0].text
-    },
-    likeStyle(val) {
-      return likeInfo[val || 0].style
-    },
+    concernStyle(val) { return concernInfo[val || 0].style },
+    concernIcon(val) { return concernInfo[val || 0].icon },
+    likeText(val) { return likeInfo[val || 0].text },
+    likeStyle(val) { return likeInfo[val || 0].style },
     imageUrl(id, imageLoaded) {
       if (imageLoaded[id] === '') return require('@/assets/default.jpg')
       return imageLoaded[id] || require('@/assets/logo.jpg')
@@ -141,6 +161,7 @@ export default {
     data() {
       return _.map(this.raw, this.translator)
     },
+    likeInfo() { return likeInfo },
     curPage: {
       get() { return this.$store.state.title.curPage },
       set(val) { this.$store.commit('title/setState', { key: 'curPage', val }) }
@@ -159,6 +180,11 @@ export default {
     },
     handleShow(item) {
       this.$store.commit('title/loadImage', item)
+    },
+    handleLike(item, like) {
+      this.$set(item, 'like', like)
+      this.$set(item, 'showLike', false)
+      likeTitle(item.id, like)
     }
   }
 }
@@ -194,6 +220,6 @@ export default {
   }
 
   .clearfix:after {
-      clear: both
+      clear: both;
   }
 </style>

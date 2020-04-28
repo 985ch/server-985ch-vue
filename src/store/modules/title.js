@@ -6,7 +6,7 @@ const state = {
   curPage: 1, // 当前页
   searchText: '', // 搜索字符串
   nsfw: false,
-  concern: false, // 是否仅搜索关注作品
+  concern: 0, // 是否仅搜索关注作品
   pageSize: 15, // 每页条目数
   selectTypes: null, // 选中的作品类型
   titleTypes: null, // 所有作品类型
@@ -61,7 +61,7 @@ const actions = {
       keyword,
       types: getters.types,
       nsfw: state.nsfw ? 1 : 0,
-      concern: state.concern ? 1 : 0,
+      concern: state.concern,
       offset,
       limit: state.pageSize
     })

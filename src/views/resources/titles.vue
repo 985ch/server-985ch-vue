@@ -12,8 +12,8 @@
       <el-col :xs="16" :sm="5" :md="4" :lg="4" :xl="2">
         <el-button
           v-if="role['adult']"
-          :type="curConcern?'primary':'info'"
-          @click="curConcern=!curConcern"
+          :type="curConcern==2?'success':curConcern==1?'primary':'info'"
+          @click="curConcern=(curConcern+1)%3"
         >{{ curConcern?'关注':'全部' }}</el-button>
         <el-button
           v-if="role['adult']"
