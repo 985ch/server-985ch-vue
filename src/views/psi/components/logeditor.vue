@@ -8,10 +8,16 @@
         </el-radio-group>
       </el-form-item>
       <el-form-item label="交易对象">
-        <member-input ref="memberInput" v-model="value.memberid" :type="value.type" prop="member" />
+        <member-input ref="memberInput" v-model="value.memberid" :type="value.type" prop="member" @level-change="levelChange" />
       </el-form-item>
       <el-form-item label="交易商品">
-        <goods-input v-model="value.goods" :type="value.type" prop="goods" />
+        <goods-input
+          v-model="value.goods"
+          :type="value.type"
+          :level="memberLevel"
+          prop="goods"
+          @price-change="goodsPriceChange"
+        />
       </el-form-item>
       <el-form-item label="交易金额" prop="amount">
         <el-input v-model="value.amount" type="number" />
@@ -48,7 +54,8 @@ export default {
   },
   data() {
     return {
-      rules: {}
+      rules: {},
+      editLevel: 0
     }
   },
   computed: {
@@ -58,9 +65,24 @@ export default {
       'activeSuppliers', 'activeCustomers',
       'activeGoods', 'goodsMap',
       'activeStorages', 'storageMap'
-    ])
+    ]),
+    memberLevel() {
+      const memberMap = this.memberMap
+      const member = memberMap[this.value.type === 0 ? 1 : this.value.memberid]
+      if (!member) return this.editLevel
+      return member.level
+    }
+  },
+  mounted() {
+    this.editLevel = this.memberMap[this.value.memberid].level
   },
   methods: {
+    goodsPriceChange(price) {
+      this.$set(this.value, 'amount', price)
+    },
+    levelChange(level) {
+      this.editLevel = level
+    },
     async onCommit() {
       const cur = this.value
       if (cur.goods.length === 0) {

@@ -3,17 +3,23 @@
     <el-table
       v-show="showGoods.length>0"
       size="small"
+      show-summary
       :data="showGoods"
       :show-header="false"
       style="width: 100%"
+      :summary-method="getTotalPrice"
       @row-click="goodsSelect"
     >
       <el-table-column label="商品">
         <template slot-scope="scope">
-          <span>{{ `${goodsMap[scope.row.goodsid].name}(${storageMap[scope.row.storeid].name})` }}</span>
+          <span>{{ scope.row | goodsFilter(goodsMap,storageMap) }}</span>
         </template>
       </el-table-column>
-      <el-table-column prop="num" label="数量" width="80" />
+      <el-table-column label="价格" width="120">
+        <template slot-scope="scope">
+          <span>{{ prices.list[scope.$index] }}</span>
+        </template>
+      </el-table-column>
     </el-table>
     <el-dialog
       :title="editDlgTitle"
@@ -70,9 +76,15 @@ import _ from 'lodash'
 
 export default {
   name: 'GoodsInput',
+  filters: {
+    goodsFilter(goods, goodsMap, storageMap) {
+      return `【${storageMap[goods.storeid].name}】${goodsMap[goods.goodsid].name} × ${goods.num}`
+    }
+  },
   props: {
     value: { type: Array, required: true },
-    type: { type: Number, default: 0 }
+    type: { type: Number, default: 0 },
+    level: { type: Number, default: 1 }
   },
   data() {
     return {
@@ -102,11 +114,28 @@ export default {
       const edit = this.editGoods
       return _.findIndex(this.list, obj => obj.goodsid === edit.goodsid && obj.storeid === edit.storeid && obj.num > 0)
     },
+    prices() {
+      const goods = this.showGoods
+      const level = this.level
+      const goodsMap = this.goodsMap
+      const list = new Array(goods.length)
+      let total = 0
+      _.forEach(goods, (cur, idx) => {
+        const price = cur.num * goodsMap[cur.goodsid].prices[level]
+        list[idx] = price
+        total += price
+      })
+      this.$emit('price-change', total)
+      return { list, total }
+    },
     editDlgTitle() {
       return this.goodsIdx >= 0 ? '修改商品数量' : '添加商品'
     }
   },
   methods: {
+    getTotalPrice() {
+      return ['总价', this.prices.total]
+    },
     addGoods() {
       const showGoods = this.showGoods
       const goods = _.find(this.activeGoods, obj => _.every(showGoods, item => item.goodsid !== obj.id))

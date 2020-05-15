@@ -69,6 +69,11 @@ export default {
         this.level = members[0].level
         this.$emit('input', members[0].id)
       }
+    },
+    level(val, old) {
+      if (val !== old) {
+        this.$emit('level-change', val)
+      }
     }
   },
   mounted() {
