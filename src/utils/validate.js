@@ -85,3 +85,12 @@ export function isArray(arg) {
   }
   return Array.isArray(arg)
 }
+
+/**
+ * @param {Number} arg
+ * @returns {Boolean}
+ */
+export function isMoney(arg) {
+  if (typeof arg !== 'number') return false
+  return true
+}

@@ -161,7 +161,6 @@ export default {
       this.resources = _.filter(this.resources, item => {
         return item.id !== id
       })
-      console.log(this.resources)
       this.activeResource = ''
     },
     // 爬取bangumi的资源

@@ -104,6 +104,45 @@ export const constantRoutes = [
         meta: { title: '画廊', icon: 'component' }
       }
     ]
+  },
+  {
+    path: '/psi',
+    component: Layout,
+    redirect: '/psi/logs',
+    name: 'Psi',
+    meta: { title: '进销存系统', icon: 'chart', roles: ['psi'] },
+    children: [
+      {
+        path: '/psi/logs',
+        name: 'PsiLogs',
+        component: () => import('@/views/psi/logs'),
+        meta: { title: '销售记录', icon: 'table' }
+      },
+      {
+        path: '/psi/store',
+        name: 'PsiStore',
+        component: () => import('@/views/psi/store'),
+        meta: { title: '库存管理', icon: 'shopping' }
+      },
+      {
+        path: '/psi/goods',
+        name: 'PsiGoods',
+        component: () => import('@/views/psi/goods'),
+        meta: { title: '商品管理', icon: 'theme' }
+      },
+      {
+        path: '/psi/members',
+        name: 'PsiMembers',
+        component: () => import('@/views/psi/members'),
+        meta: { title: '交易对象', icon: 'peoples' }
+      },
+      {
+        path: '/psi/storages',
+        name: 'PsiStorages',
+        component: () => import('@/views/psi/storages'),
+        meta: { title: '仓库管理', icon: 'tree' }
+      }
+    ]
   }
 ]
 

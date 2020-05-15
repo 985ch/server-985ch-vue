@@ -13,6 +13,10 @@
         mode="vertical"
       >
         <sidebar-item v-for="route in permission_routes" :key="route.path" :item="route" :base-path="route.path" />
+        <el-menu-item index="showSettings">
+          <el-switch v-model="showSettings" />
+          <span slot="title">显示设置栏</span>
+        </el-menu-item>
       </el-menu>
     </el-scrollbar>
   </div>
@@ -48,6 +52,15 @@ export default {
     },
     isCollapse() {
       return !this.sidebar.opened
+    },
+    showSettings: {
+      get() { return this.$store.state.settings.showSettings },
+      set(val) {
+        this.$store.dispatch('settings/changeSetting', {
+          key: 'showSettings',
+          value: val
+        })
+      }
     }
   }
 }
