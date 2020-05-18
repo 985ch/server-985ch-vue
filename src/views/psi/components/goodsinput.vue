@@ -35,21 +35,7 @@
             :disabled="isEdit"
           >
             <el-option
-              v-for="item in activeGoods"
-              :key="item.id"
-              :label="item.name"
-              :value="item.id"
-            />
-          </el-select>
-        </el-form-item>
-        <el-form-item label="仓库">
-          <el-select
-            v-model="editGoods.storeid"
-            placeholder="请选择仓库"
-            :disabled="isEdit"
-          >
-            <el-option
-              v-for="item in activeStorages"
+              v-for="item in selectGoods"
               :key="item.id"
               :label="item.name"
               :value="item.id"
@@ -65,7 +51,7 @@
         </el-form-item>
       </el-form>
     </el-dialog>
-    <el-button @click="addGoods">添加</el-button>
+    <el-button v-show="selectGoods.length>0" @click="addGoods">添加</el-button>
   </div>
 
 </template>
@@ -78,7 +64,7 @@ export default {
   name: 'GoodsInput',
   filters: {
     goodsFilter(goods, goodsMap, storageMap) {
-      return `【${storageMap[goods.storeid].name}】${goodsMap[goods.goodsid].name} × ${goods.num}`
+      return `${goodsMap[goods.goodsid].name} × ${goods.num}`
     }
   },
   props: {
@@ -90,7 +76,6 @@ export default {
     return {
       editGoods: {
         goodsid: '',
-        storeid: '',
         num: 0
       },
       isEdit: false,
@@ -98,7 +83,7 @@ export default {
     }
   },
   computed: {
-    ...mapGetters('psi', ['activeStorages', 'storageMap', 'allGoods', 'activeGoods', 'goodsMap']),
+    ...mapGetters('psi', ['memberMap', 'activeStorages', 'storageMap', 'allGoods', 'activeGoods', 'goodsMap']),
     newGoods() {
       const goods = this.value
       return _.filter(this.activeGoods, obj => _.every(goods, item => item.goodsid !== obj.id))
@@ -112,21 +97,32 @@ export default {
     },
     goodsIdx() {
       const edit = this.editGoods
-      return _.findIndex(this.list, obj => obj.goodsid === edit.goodsid && obj.storeid === edit.storeid && obj.num > 0)
+      return _.findIndex(this.list, obj => obj.goodsid === edit.goodsid && obj.num > 0)
+    },
+    selectGoods() {
+      const showGoods = this.showGoods
+      if (this.isEdit) {
+        return [this.goodsMap[this.editGoods.goodsid]]
+      } else {
+        return _.filter(this.activeGoods, obj => _.every(showGoods, item => item.goodsid !== obj.id))
+      }
     },
     prices() {
       const goods = this.showGoods
       const level = this.level
+      const myLevel = this.memberMap[1].level
       const goodsMap = this.goodsMap
       const list = new Array(goods.length)
       let total = 0
+      let totalCost = 0
       _.forEach(goods, (cur, idx) => {
         const price = cur.num * goodsMap[cur.goodsid].prices[level]
+        const cost = cur.num * goodsMap[cur.goodsid].prices[myLevel]
         list[idx] = price
         total += price
+        totalCost += cost
       })
-      this.$emit('price-change', total)
-      return { list, total }
+      return { list, total, totalCost }
     },
     editDlgTitle() {
       return this.goodsIdx >= 0 ? '修改商品数量' : '添加商品'
@@ -137,11 +133,10 @@ export default {
       return ['总价', this.prices.total]
     },
     addGoods() {
-      const showGoods = this.showGoods
-      const goods = _.find(this.activeGoods, obj => _.every(showGoods, item => item.goodsid !== obj.id))
+      const selectGoods = this.selectGoods
+      const goods = selectGoods[0]
       this.editGoods = {
-        goodsid: this.goodsid = goods ? goods.id : this.activeGoods[0].id,
-        storeid: this.storeid = this.activeStorages[0].id,
+        goodsid: goods ? goods.id : this.activeGoods[0].id,
         num: 0
       }
       this.isEdit = false
@@ -164,6 +159,10 @@ export default {
       } else if (cur.num > 0) {
         this.list.push(cur)
       }
+
+      const prices = this.prices
+      this.$emit('price-change', { price: prices.total, cost: prices.totalCost })
+
       this.showDlg = false
     }
   }

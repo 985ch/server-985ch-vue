@@ -3,14 +3,29 @@
     <el-form ref="form" size="small" :model="value" :rules="rules" label-width="80px">
       <el-form-item label="类型">
         <el-radio-group v-model="value.type" :disabled="value.id>0">
-          <el-radio-button :label="0">购入</el-radio-button>
-          <el-radio-button :label="1">售出</el-radio-button>
+          <el-radio-button v-for="(type, index) in logTypes" :key="index" :label="index">{{ type }}</el-radio-button>
         </el-radio-group>
       </el-form-item>
       <el-form-item label="交易对象">
-        <member-input ref="memberInput" v-model="value.memberid" :type="value.type" prop="member" @level-change="levelChange" />
+        <member-input
+          ref="memberInput"
+          v-model="value.memberid"
+          :type="value.type"
+          prop="member"
+          @level-change="levelChange"
+        />
       </el-form-item>
-      <el-form-item label="交易商品">
+      <el-form-item v-if="value.type<4" label="仓库">
+        <el-select v-model="value.storeid" placeholder="请选择仓库">
+          <el-option
+            v-for="item in activeStorages"
+            :key="item.id"
+            :label="item.name"
+            :value="item.id"
+          />
+        </el-select>
+      </el-form-item>
+      <el-form-item v-if="value.type<2" label="交易商品">
         <goods-input
           v-model="value.goods"
           :type="value.type"
@@ -21,6 +36,9 @@
       </el-form-item>
       <el-form-item label="交易金额" prop="amount">
         <el-input v-model="value.amount" type="number" />
+      </el-form-item>
+      <el-form-item label="商品成本" prop="cost">
+        <el-input v-model="value.cost" type="number" />
       </el-form-item>
       <el-form-item label="邮费支出" prop="postage">
         <el-input v-model="value.postage" type="number" />
@@ -60,7 +78,7 @@ export default {
   },
   computed: {
     ...mapGetters('psi', [
-      'memberTypes', 'storageTypes', 'logStatus',
+      'memberTypes', 'storageTypes', 'logTypes', 'logStatus',
       'activeMembers', 'memberMap',
       'activeSuppliers', 'activeCustomers',
       'activeGoods', 'goodsMap',
@@ -77,15 +95,16 @@ export default {
     this.editLevel = this.memberMap[this.value.memberid].level
   },
   methods: {
-    goodsPriceChange(price) {
+    goodsPriceChange({ price, cost }) {
       this.$set(this.value, 'amount', price)
+      this.$set(this.value, 'cost', cost)
     },
     levelChange(level) {
       this.editLevel = level
     },
     async onCommit() {
       const cur = this.value
-      if (cur.goods.length === 0) {
+      if (cur.type < 2 && cur.goods.length === 0) {
         this.$message({ type: 'error', message: '订单货物不能为空' })
         return
       }

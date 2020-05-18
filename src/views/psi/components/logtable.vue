@@ -6,12 +6,14 @@
           <el-form size="mini" :model="scope.row" label-width="80px">
             <el-form-item label="交易编号">{{ scope.row.id }}</el-form-item>
             <el-form-item label="交易对象">{{ memberMap[scope.row.memberid].name }}</el-form-item>
-            <el-form-item label="交易商品">
+            <el-form-item v-if="scope.row.type<4" label="仓库">{{ scope.row.storeid | storeFilter(storageMap) }}</el-form-item>
+            <el-form-item v-if="scope.row.type<2" label="交易商品">
               <div v-for="item in scope.row.goods" :key="`${item.goodsid}_${item.storeid}`">
                 <span>{{ `${goodsMap[item.goodsid].name} × ${item.num}` }}</span>
               </div>
             </el-form-item>
             <el-form-item label="交易金额">{{ scope.row.amount }}元</el-form-item>
+            <el-form-item label="商品成本">{{ scope.row.cost }}元</el-form-item>
             <el-form-item label="邮费支出">{{ scope.row.postage }}元</el-form-item>
             <el-form-item v-show="scope.row.info!=''" label="备注">{{ scope.row.info }}</el-form-item>
             <el-form-item class="form-bottom">
@@ -23,7 +25,7 @@
       </el-table-column>
       <el-table-column label="类型" width="60">
         <template slot-scope="scope">
-          {{ scope.row.type===0?'购入':'售出' }}
+          {{ logTypes[scope.row.type] }}
         </template>
       </el-table-column>
       <el-table-column label="交易时间">
@@ -67,6 +69,11 @@ export default {
       const isSale = row.type === 1
       const amount = row.amount + row.postage * (isSale ? -1 : 1)
       return `${isSale ? '+' : '-'}${amount.toFixed(2)}元`
+    },
+    storeFilter(storeid, storageMap) {
+      const store = storageMap[storeid]
+      if (store) return store.name
+      return '-'
     }
   },
   components: {
@@ -93,12 +100,12 @@ export default {
     }
   },
   computed: {
-    ...mapGetters('psi', ['memberMap', 'activeCustomers', 'goodsMap'])
+    ...mapGetters('psi', ['memberMap', 'activeCustomers', 'storageMap', 'goodsMap', 'logTypes'])
   },
   methods: {
     showEditDlg(row) {
       if (row) {
-        this.curLog = _.clone(row)
+        this.curLog = _.cloneDeep(row)
       } else {
         this.curLog = {
           id: 0,

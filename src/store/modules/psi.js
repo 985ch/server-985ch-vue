@@ -29,8 +29,9 @@ const state = {
 }
 
 const getters = {
-  memberTypes() { return ['客户', '会员', '三级', '二级', '总代'] },
+  memberTypes() { return ['客户', '会员', '四级', '三级', '二级', '总代'] },
   storageTypes() { return ['自有', '代持', '寄存'] },
+  logTypes() { return ['进货', '出货', '充值', '储值', '支出', '收入'] },
   logStatus() { return ['未完成', '完成'] },
   allMembers(state) { return state.members || [] },
   memberMap(state, getters) { return _.keyBy(getters.allMembers, 'id') },

@@ -13,9 +13,16 @@
           <span>{{ storageTypes[scope.row.type] }}</span>
         </template>
       </el-table-column>
-      <el-table-column prop="type" label="归属" width="100">
+      <el-table-column prop="balance" label="余额" width="80">
         <template slot-scope="scope">
-          <span>{{ memberMap[scope.row.memberid].name }}</span>
+          <el-popover
+            placement="bottom"
+            width="200"
+            trigger="click"
+            :content="`归属：${memberMap[scope.row.memberid].name}`"
+          >
+            <span slot="reference">{{ scope.row.memberid===1?'-':scope.row.balance }}</span>
+          </el-popover>
         </template>
       </el-table-column>
       <el-table-column label="操作" width="100" align="center">
@@ -48,7 +55,7 @@
           <el-input v-model="curStorage.name" />
         </el-form-item>
         <el-form-item label="分类">
-          <el-select v-model="curStorage.type" placeholder="请选择分类">
+          <el-select v-model="curStorage.type" placeholder="请选择分类" @change="onTypeChange">
             <el-option
               v-for="(value,index) in storageTypes"
               :key="value"
@@ -60,12 +67,15 @@
         <el-form-item label="归属">
           <el-select v-model="curStorage.memberid" filterable placeholder="请选择成员">
             <el-option
-              v-for="obj in activeMembers"
+              v-for="obj in optionMembers"
               :key="obj.name"
               :label="obj.name"
               :value="obj.id"
             />
           </el-select>
+        </el-form-item>
+        <el-form-item label="余额">
+          <el-input v-model="curStorage.balance" :disabled="curStorage.type===0" type="number" />
         </el-form-item>
         <el-form-item label="备注">
           <el-input v-model="curStorage.info" type="textarea" />
@@ -109,6 +119,7 @@ export default {
         name: '新仓库',
         type: 0,
         memberid: 1,
+        balance: 0,
         info: '',
         hide: 0
       },
@@ -118,7 +129,20 @@ export default {
     }
   },
   computed: {
-    ...mapGetters('psi', ['storageTypes', 'allStorages', 'memberMap', 'activeMembers'])
+    ...mapGetters('psi', ['storageTypes', 'allStorages', 'memberMap', 'activeMembers']),
+    optionMembers() {
+      const members = this.activeMembers
+      const type = this.curStorage.type
+      let result
+      if (type === 0) {
+        result = this.memberMap[1] ? [this.memberMap[1]] : []
+      } else if (type === 1) {
+        result = _.filter(members, obj => obj.type === 0)
+      } else {
+        result = _.filter(members, obj => obj.type === 1)
+      }
+      return result
+    }
   },
   async created() {
     await this.$store.dispatch('psi/getAllMembers')
@@ -132,6 +156,7 @@ export default {
         name: '新仓库',
         type: 0,
         memberid: 1,
+        balance: 0,
         info: '',
         hide: 0
       }
@@ -150,6 +175,12 @@ export default {
           this.$store.commit('psi/saveStorage', data)
         })
       }).catch(() => {})
+    },
+    onTypeChange(type) {
+      if (type === 0) {
+        this.$set(this.curStorage, 'balance', 0)
+      }
+      this.$set(this.curStorage, 'memberid', this.optionMembers[0].id)
     },
     async onShowRow(data) {
       data.hide = 0
