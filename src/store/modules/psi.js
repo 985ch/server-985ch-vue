@@ -17,8 +17,8 @@ function saveState(state, key, data) {
   }
 }
 // 从接口获取数据并存储到本地
-async function getAndSave(state, key, func) {
-  if (!state[key]) state[key] = await func()
+async function getAndSave(state, key, func, force) {
+  if (force || !state[key]) state[key] = await func()
   return state[key]
 }
 
@@ -57,16 +57,16 @@ const mutations = {
 
 const actions = {
   // 获取所有成员
-  async getAllMembers({ state }) {
-    return await getAndSave(state, 'members', getMembers)
+  async getAllMembers({ state }, force) {
+    return await getAndSave(state, 'members', getMembers, force)
   },
   // 获取所有商品
-  async getAllGoods({ state }) {
-    return await getAndSave(state, 'goods', getGoods)
+  async getAllGoods({ state }, force) {
+    return await getAndSave(state, 'goods', getGoods, force)
   },
   // 获取所有仓库
-  async getAllStorages({ state }) {
-    return await getAndSave(state, 'storages', getStorages)
+  async getAllStorages({ state }, force) {
+    return await getAndSave(state, 'storages', getStorages, force)
   }
 }
 

@@ -7,13 +7,13 @@
     <el-select v-model="curMonth" style="width:100px" size="small">
       <el-option v-for="val in allMonth" :key="val" :value="val" />
     </el-select>
-    <span :class="showData.profit>=0?'income-box':'pay-box'">
+    <span :class="showData.profit | moneyStyleFilter">
       {{ `${showData.profit>0?'+':''}${showData.profit.toFixed(2)}元` }}
     </span>
     <div>
-      <span class="income-box">收入：{{ showData.income.toFixed(2) }}元</span>
-      <span class="pay-box">支出：{{ showData.pay.toFixed(2) }}元</span>
-      <span class="pay-box">邮费：{{ showData.postage.toFixed(2) }}元</span>
+      <span class="income-box">收入{{ showData.income.toFixed(2) }}元</span>
+      <span class="pay-box">支出{{ showData.pay.toFixed(2) }}元</span>
+      <span :class="showData.saleProfit | moneyStyleFilter">利润{{ showData.saleProfit.toFixed(2) }}元</span>
     </div>
     <log-table
       :logs="logs"
@@ -32,6 +32,11 @@ import _ from 'lodash'
 
 export default {
   name: 'PsiLogs',
+  filters: {
+    moneyStyleFilter(money) {
+      return money > 0 ? 'income-box' : 'pay-box'
+    }
+  },
   components: {
     LogTable: () => import('./components/logtable')
   },
@@ -45,7 +50,7 @@ export default {
   computed: {
     ...mapGetters('psi', [
       'memberTypes', 'storageTypes', 'logStatus',
-      'activeMembers', 'memberMap',
+      'memberMap',
       'activeSuppliers', 'activeCustomers',
       'activeGoods', 'goodsMap',
       'activeStorages', 'storageMap'
@@ -91,42 +96,50 @@ export default {
       } else {
         logs = this.groupLogs[year][month]
       }
-      return logs || []
+      return _.orderBy(logs, ['logtime'], ['desc']) || []
     },
     showData() {
       const logs = this.showLogs
-      const amount = [0, 0]
+      const amount = [0, 0, 0, 0, 0, 0]
       let postage = 0
+      let saleProfit = 0
       const goods = {}
       const members = {}
       _.forEach(logs, log => {
         if (!log) return
         amount[log.type] += log.amount
         postage += log.postage
+        if (log.type === 1) {
+          saleProfit += log.amount - log.cost
+        }
 
-        const member = _.get(members, [log.memberid], { amount: [0, 0], postage: 0, goods: {}})
+        const member = _.get(members, [log.memberid], { amount: [0, 0, 0, 0, 0, 0], postage: 0, goods: {}})
         member.amount[log.type] += log.amount
         member.postage += log.postage
         _.set(members, [log.memberid], member)
 
         _.forEach(log.goods, item => {
-          const goodsData = _.get(goods, item.goodsid, { count: [0, 0], members: {}})
+          const goodsData = _.get(goods, item.goodsid, { count: [0, 0, 0, 0, 0, 0], members: {}})
           goodsData.count[log.type] += item.num
           _.set(goods, item.goodsid, goodsData)
 
-          const goodsMember = _.get(goodsData.members, log.memberid, [0, 0])
+          const goodsMember = _.get(goodsData.members, log.memberid, [0, 0, 0, 0, 0, 0])
           goodsMember[log.type] += item.num
           _.set(goodsData.members, log.memberid, goodsMember)
 
-          const memberGoods = _.get(member.goods, item.goodsid, [0, 0])
+          const memberGoods = _.get(member.goods, item.goodsid, [0, 0, 0, 0, 0, 0])
           memberGoods[log.type] += item.num
           _.set(member.goods, item.goodsid, memberGoods)
         })
       })
+      const pay = amount[0] + amount[2] + amount[4] + postage
+      const income = amount[1] + amount[3] + amount[5]
       return {
-        pay: amount[0],
-        income: amount[1],
-        profit: amount[1] - amount[0] - postage,
+        amount,
+        pay,
+        income,
+        profit: income - pay,
+        saleProfit: saleProfit + amount[5] - postage - amount[4],
         postage,
         goods,
         members

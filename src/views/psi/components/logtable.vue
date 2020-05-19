@@ -1,10 +1,18 @@
 <template>
   <div>
-    <el-table :data="showLogs" border fit :row-style="rowStyle">
+    <el-table
+      :data="showLogs"
+      border
+      fit
+      :row-style="rowStyle"
+      row-key="id"
+      :expand-row-keys="expandRow"
+      @expand-change="expandChange"
+    >
       <el-table-column type="expand">
         <template slot-scope="scope">
           <el-form size="mini" :model="scope.row" label-width="80px">
-            <el-form-item label="交易编号">{{ scope.row.id }}</el-form-item>
+            <el-form-item label="交易时间">{{ scope.row.logtime | timeFilter }}</el-form-item>
             <el-form-item label="交易对象">{{ memberMap[scope.row.memberid].name }}</el-form-item>
             <el-form-item v-if="scope.row.type<4" label="仓库">{{ scope.row.storeid | storeFilter(storageMap) }}</el-form-item>
             <el-form-item v-if="scope.row.type<2" label="交易商品">
@@ -12,9 +20,10 @@
                 <span>{{ `${goodsMap[item.goodsid].name} × ${item.num}` }}</span>
               </div>
             </el-form-item>
-            <el-form-item label="交易金额">{{ scope.row.amount }}元</el-form-item>
-            <el-form-item label="商品成本">{{ scope.row.cost }}元</el-form-item>
-            <el-form-item label="邮费支出">{{ scope.row.postage }}元</el-form-item>
+            <el-form-item v-if="scope.row.type<2" label="交易金额">{{ scope.row.amount }}元</el-form-item>
+            <el-form-item v-if="scope.row.type<2" label="商品成本">{{ scope.row.cost }}元</el-form-item>
+            <el-form-item v-if="scope.row.type<2" label="邮费支出">{{ scope.row.postage }}元</el-form-item>
+            <el-form-item v-show="scope.row.type===1" label="利润">{{ scope.row.amount-scope.row.cost-scope.row.postage }}元</el-form-item>
             <el-form-item v-show="scope.row.info!=''" label="备注">{{ scope.row.info }}</el-form-item>
             <el-form-item class="form-bottom">
               <el-button type="primary" @click="showEditDlg(scope.row)">修改</el-button>
@@ -23,17 +32,22 @@
           </el-form>
         </template>
       </el-table-column>
-      <el-table-column label="类型" width="60">
+      <el-table-column label="类型" width="55">
         <template slot-scope="scope">
           {{ logTypes[scope.row.type] }}
         </template>
       </el-table-column>
-      <el-table-column label="交易时间">
+      <el-table-column label="交易对象">
         <template slot-scope="scope">
-          {{ scope.row.logtime | timeFilter }}
+          {{ memberMap[scope.row.memberid].name }}
         </template>
       </el-table-column>
-      <el-table-column label="交易金额" width="120">
+      <el-table-column label="时间" width="60">
+        <template slot-scope="scope">
+          {{ scope.row.logtime | dateFilter }}
+        </template>
+      </el-table-column>
+      <el-table-column label="交易金额" width="100">
         <template slot-scope="scope">
           {{ scope.row | amountFilter }}
         </template>
@@ -65,10 +79,13 @@ export default {
     timeFilter(time) {
       return parseTime(time)
     },
+    dateFilter(time) {
+      return parseTime(time, '{m}-{d}')
+    },
     amountFilter(row) {
-      const isSale = row.type === 1
-      const amount = row.amount + row.postage * (isSale ? -1 : 1)
-      return `${isSale ? '+' : '-'}${amount.toFixed(2)}元`
+      const isIncome = (row.type % 2 === 1)
+      const amount = row.amount + row.postage * (isIncome ? -1 : 1)
+      return `${isIncome ? '+' : '-'}${amount.toFixed(2)}元`
     },
     storeFilter(storeid, storageMap) {
       const store = storageMap[storeid]
@@ -89,18 +106,21 @@ export default {
         id: 0,
         type: 1,
         memberid: 1,
+        storeid: 1,
         amount: 0,
+        cost: 0,
         postage: 0,
         info: '',
         logtime: new Date(),
         status: 1,
         goods: []
       },
+      expandRow: [],
       editMode: false
     }
   },
   computed: {
-    ...mapGetters('psi', ['memberMap', 'activeCustomers', 'storageMap', 'goodsMap', 'logTypes'])
+    ...mapGetters('psi', ['memberMap', 'activeCustomers', 'activeStorages', 'storageMap', 'goodsMap', 'logTypes'])
   },
   methods: {
     showEditDlg(row) {
@@ -111,7 +131,9 @@ export default {
           id: 0,
           type: 1,
           memberid: this.activeCustomers[0].id,
+          storeid: this.activeStorages[0].id,
           amount: 0,
+          cost: 0,
           postage: 0,
           info: '',
           logtime: new Date(),
@@ -137,7 +159,15 @@ export default {
     },
     rowStyle(scope) {
       return {
-        color: scope.row.type === 0 ? 'darkgreen' : 'brown'
+        color: (scope.row.type % 2 === 0) ? 'darkgreen' : 'brown'
+      }
+    },
+    expandChange({ id }) {
+      const expanded = this.expandRow
+      if (expanded[0] === id) {
+        this.expandRow = []
+      } else {
+        this.expandRow = [id]
       }
     },
     delLogDlg(id) {

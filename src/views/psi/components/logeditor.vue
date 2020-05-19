@@ -37,10 +37,10 @@
       <el-form-item label="交易金额" prop="amount">
         <el-input v-model="value.amount" type="number" />
       </el-form-item>
-      <el-form-item label="商品成本" prop="cost">
+      <el-form-item v-show="value.type===1" label="商品成本" prop="cost">
         <el-input v-model="value.cost" type="number" />
       </el-form-item>
-      <el-form-item label="邮费支出" prop="postage">
+      <el-form-item v-show="value.type<2" label="邮费支出" prop="postage">
         <el-input v-model="value.postage" type="number" />
       </el-form-item>
       <el-form-item label="交易时间" prop="logtime">
@@ -79,7 +79,7 @@ export default {
   computed: {
     ...mapGetters('psi', [
       'memberTypes', 'storageTypes', 'logTypes', 'logStatus',
-      'activeMembers', 'memberMap',
+      'memberMap',
       'activeSuppliers', 'activeCustomers',
       'activeGoods', 'goodsMap',
       'activeStorages', 'storageMap'
@@ -108,6 +108,10 @@ export default {
         this.$message({ type: 'error', message: '订单货物不能为空' })
         return
       }
+      if (cur.type >= 2) cur.goods = []
+      if (cur.type !== 1) cur.cost = 0
+      if (cur.type >= 2) cur.postage = 0
+      if (cur.type >= 4) cur.storeid = 0
       if (cur.memberid === 0) {
         const newMember = await this.addMember()
         if (!newMember) {
@@ -116,6 +120,7 @@ export default {
         }
         cur.memberid = newMember.id
       }
+      if (cur.logtime instanceof Date)cur.logtime = cur.logtime.toString()
       if (cur.id === 0) {
         const result = await newLog(cur)
         cur.id = result.id

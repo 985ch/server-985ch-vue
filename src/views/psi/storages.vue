@@ -146,7 +146,7 @@ export default {
   },
   async created() {
     await this.$store.dispatch('psi/getAllMembers')
-    await this.$store.dispatch('psi/getAllStorages')
+    await this.$store.dispatch('psi/getAllStorages', true)
   },
   methods: {
     showEditDlg(id) {

@@ -52,6 +52,13 @@ export default {
       'allMembers',
       'memberMap'
     ]),
+    optionMembers() {
+      const suppliers = this.activeSuppliers
+      const customers = this.activeCustomers
+      const allMembers = _.takeRight(this.activeMembers, this.activeMembers.length - 1)
+      const groups = [suppliers, customers, suppliers, customers, allMembers, allMembers]
+      return groups[this.type] || []
+    },
     memberData() { return _.keyBy(this.allMembers, 'name') }
   },
   watch: {
@@ -64,7 +71,7 @@ export default {
     },
     type(val, old) {
       if (val !== old) {
-        const members = val === 0 ? this.activeSuppliers : this.activeCustomers
+        const members = this.optionMembers
         this.name = members[0].name
         this.level = members[0].level
         this.$emit('input', members[0].id)
@@ -101,7 +108,7 @@ export default {
       }
     },
     getActiveMembers(text, cb) {
-      const members = this.type === 0 ? this.activeSuppliers : this.activeCustomers
+      const members = this.optionMembers
       if (text === '') {
         cb(members)
       } else {
