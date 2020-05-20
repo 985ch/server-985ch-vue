@@ -11,17 +11,60 @@
       {{ `${showData.profit>0?'+':''}${showData.profit.toFixed(2)}元` }}
     </span>
     <div>
-      <span class="income-box">收入{{ showData.income.toFixed(2) }}元</span>
-      <span class="pay-box">支出{{ showData.pay.toFixed(2) }}元</span>
-      <span :class="showData.saleProfit | moneyStyleFilter">利润{{ showData.saleProfit.toFixed(2) }}元</span>
+      <el-popover
+        placement="bottom"
+        trigger="hover"
+      >
+        <span slot="reference" class="income-box">收入{{ showData.income.toFixed(2) }}元</span>
+        <div class="income-box">
+          <div>出货收入{{ showData.amount[1].toFixed(2) }}元</div>
+          <div>储值收入{{ showData.amount[3].toFixed(2) }}元</div>
+          <div>其他收入{{ showData.amount[5].toFixed(2) }}元</div>
+        </div>
+      </el-popover>
+      <el-popover
+        placement="bottom"
+        trigger="hover"
+      >
+        <span slot="reference" class="pay-box">支出{{ showData.pay.toFixed(2) }}元</span>
+        <div class="pay-box">
+          <div>进货支出{{ showData.amount[0].toFixed(2) }}元</div>
+          <div>充值支出{{ showData.amount[2].toFixed(2) }}元</div>
+          <div>订单支出{{ showData.postage.toFixed(2) }}元</div>
+          <div>其他支出{{ showData.amount[4].toFixed(2) }}元</div>
+        </div>
+      </el-popover>
+      <el-popover
+        placement="bottom"
+        trigger="hover"
+      >
+        <span slot="reference" :class="showData.saleProfit | moneyStyleFilter">利润{{ showData.fixedProfit.toFixed(2) }}元</span>
+        <div>
+          <div class="income-box">销售毛利润{{ showData.saleProfit.toFixed(2) }}元</div>
+          <div class="income-box">其他收入{{ showData.amount[5].toFixed(2) }}元</div>
+          <div class="pay-box">订单支出{{ showData.postage.toFixed(2) }}元</div>
+          <div class="pay-box">其他支出{{ showData.amount[4].toFixed(2) }}元</div>
+        </div>
+      </el-popover>
     </div>
-    <log-table
-      :logs="logs"
-      :show-logs="showLogs"
-      @add-log="addLog"
-      @set-log="setLog"
-      @del-log="delLog"
-    />
+    <el-tabs v-model="activeTab">
+      <el-tab-pane label="交易记录" name="logs">
+        <log-table
+          :logs="logs"
+          :show-logs="showLogs"
+          @add-log="addLog"
+          @set-log="setLog"
+          @del-log="delLog"
+        />
+      </el-tab-pane>
+      <el-tab-pane label="按人统计" name="members">
+        <member-chart :data="showData.members" />
+      </el-tab-pane>
+      <el-tab-pane label="按货物统计" name="goods">
+        <goods-chart :data="showData.goods" />
+      </el-tab-pane>
+    </el-tabs>
+
   </div>
 </template>
 
@@ -38,10 +81,13 @@ export default {
     }
   },
   components: {
-    LogTable: () => import('./components/logtable')
+    LogTable: () => import('./components/logtable'),
+    MemberChart: () => import('./components/memberchart'),
+    GoodsChart: () => import('./components/goodschart')
   },
   data() {
     return {
+      activeTab: 'logs',
       logs: [],
       curYear: '',
       curMonth: '全年'
@@ -113,22 +159,28 @@ export default {
           saleProfit += log.amount - log.cost
         }
 
-        const member = _.get(members, [log.memberid], { amount: [0, 0, 0, 0, 0, 0], postage: 0, goods: {}})
+        const member = _.get(members, [log.memberid], {
+          id: log.memberid,
+          amount: [0, 0, 0, 0, 0, 0],
+          profit: 0,
+          postage: 0,
+          goods: {}})
+        if (log.type === 1)member.profit += log.amount - log.cost
         member.amount[log.type] += log.amount
         member.postage += log.postage
         _.set(members, [log.memberid], member)
 
         _.forEach(log.goods, item => {
-          const goodsData = _.get(goods, item.goodsid, { count: [0, 0, 0, 0, 0, 0], members: {}})
+          const goodsData = _.get(goods, item.goodsid, { id: item.goodsid, count: [0, 0], members: {}})
           goodsData.count[log.type] += item.num
           _.set(goods, item.goodsid, goodsData)
 
-          const goodsMember = _.get(goodsData.members, log.memberid, [0, 0, 0, 0, 0, 0])
-          goodsMember[log.type] += item.num
+          const goodsMember = _.get(goodsData.members, log.memberid, { id: log.memberid, num: [0, 0] })
+          goodsMember.num[log.type] += item.num
           _.set(goodsData.members, log.memberid, goodsMember)
 
-          const memberGoods = _.get(member.goods, item.goodsid, [0, 0, 0, 0, 0, 0])
-          memberGoods[log.type] += item.num
+          const memberGoods = _.get(member.goods, item.goodsid, { id: item.goodsid, num: [0, 0] })
+          memberGoods.num[log.type] += item.num
           _.set(member.goods, item.goodsid, memberGoods)
         })
       })
@@ -139,7 +191,8 @@ export default {
         pay,
         income,
         profit: income - pay,
-        saleProfit: saleProfit + amount[5] - postage - amount[4],
+        saleProfit,
+        fixedProfit: saleProfit + amount[5] - postage - amount[4],
         postage,
         goods,
         members

@@ -20,10 +20,10 @@
                 <span>{{ `${goodsMap[item.goodsid].name} × ${item.num}` }}</span>
               </div>
             </el-form-item>
-            <el-form-item v-if="scope.row.type<2" label="交易金额">{{ scope.row.amount }}元</el-form-item>
-            <el-form-item v-if="scope.row.type<2" label="商品成本">{{ scope.row.cost }}元</el-form-item>
-            <el-form-item v-if="scope.row.type<2" label="邮费支出">{{ scope.row.postage }}元</el-form-item>
-            <el-form-item v-show="scope.row.type===1" label="利润">{{ scope.row.amount-scope.row.cost-scope.row.postage }}元</el-form-item>
+            <el-form-item v-if="scope.row.type<2" label="交易金额">{{ scope.row.amount.toFixed(2) }}元</el-form-item>
+            <el-form-item v-if="scope.row.type<2" label="商品成本">{{ scope.row.cost.toFixed(2) }}元</el-form-item>
+            <el-form-item v-if="scope.row.type<2" label="订单支出">{{ scope.row.postage.toFixed(2) }}元</el-form-item>
+            <el-form-item v-show="scope.row.type===1" label="利润">{{ (scope.row.amount-scope.row.cost-scope.row.postage).toFixed(2) }}元</el-form-item>
             <el-form-item v-show="scope.row.info!=''" label="备注">{{ scope.row.info }}</el-form-item>
             <el-form-item class="form-bottom">
               <el-button type="primary" @click="showEditDlg(scope.row)">修改</el-button>

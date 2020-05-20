@@ -40,7 +40,7 @@
       <el-form-item v-show="value.type===1" label="商品成本" prop="cost">
         <el-input v-model="value.cost" type="number" />
       </el-form-item>
-      <el-form-item v-show="value.type<2" label="邮费支出" prop="postage">
+      <el-form-item v-show="value.type<2" label="订单支出" prop="postage">
         <el-input v-model="value.postage" type="number" />
       </el-form-item>
       <el-form-item label="交易时间" prop="logtime">
